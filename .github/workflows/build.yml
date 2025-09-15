@@ -15,45 +15,30 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-
+    
+    permissions:
+      contents: read
+      
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Install Nix
-      uses: cachix/install-nix-action@v22
-      with:
-        nix_path: nixpkgs=channel:nixos-unstable
-        extra_nix_config: |
-          experimental-features = nix-command flakes
+      uses: DeterminateSystems/nix-installer-action@v9
     
-    - name: Build and Test XRLinuxDriver
+    - name: Check Nix flake inputs
+      uses: DeterminateSystems/flake-checker-action@v2
+    
+    - name: Build all packages
       run: |
-        nix build .#xrlinuxdriver -L
-        chmod +x tests/xrlinuxdriver/test.sh
-        tests/xrlinuxdriver/test.sh "$(realpath ./result)"
+        nix build -L .#xrlinuxdriver
+        nix build -L .#breezy-desktop-common
+        nix build -L .#breezy-desktop-gnome
+        nix build -L .#breezy-desktop-kwin
     
-    - name: Build and Test Breezy Desktop Common
+    - name: Run tests
       run: |
-        nix build .#breezy-desktop-common -L
-        chmod +x tests/breezy-desktop-common/test.sh
-        tests/breezy-desktop-common/test.sh "$(realpath ./result)"
+        chmod +x tests/run-tests.sh
+        ./tests/run-tests.sh
     
-    - name: Build and Test Breezy Desktop GNOME
-      run: |
-        nix build .#breezy-desktop-gnome -L
-        chmod +x tests/breezy-desktop-gnome/test.sh
-        tests/breezy-desktop-gnome/test.sh "$(realpath ./result)"
-    
-    - name: Build and Test Breezy Desktop KDE
-      run: |
-        nix build .#breezy-desktop-kwin -L
-        chmod +x tests/breezy-desktop-kwin/test.sh
-        tests/breezy-desktop-kwin/test.sh "$(realpath ./result)"
-    
-    - name: Run Nix Unit Tests
-      run: |
-        chmod +x tests/unit/run-tests.sh
-        ./tests/unit/run-tests.sh
-    
-    - name: Run Flake Check
+    - name: Run flake check
       run: nix flake check
