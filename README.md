@@ -8,10 +8,11 @@ The original projects can be found here:
 
 ## Goals
 
-[x] - Implement Nix packages for XRLinuxDriver
-[x] - Implement Nix services for XRLinuxDriver
-[x] - Implement Breezy Desktop integration for GNOME and KDE
-[ ] - Upstream to Nixpkgs
+- [x] Implement Nix packages for XRLinuxDriver
+- [x] Implement Nix services for XRLinuxDriver
+- [x] Implement Breezy Desktop integration for GNOME and KDE
+- [ ] Validation testing on NixOS
+- [ ] Upstream to Nixpkgs
 
 ## Usage
 
