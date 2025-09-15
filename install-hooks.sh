@@ -9,7 +9,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOOKS_DIR="$REPO_ROOT/.github/hooks"
+HOOKS_DIR="$REPO_ROOT/git-hooks"
 GIT_HOOKS_DIR="$REPO_ROOT/.git/hooks"
 
 echo -e "${BLUE}==== Installing Git Hooks for XR Linux Flake ====${NC}"
