@@ -67,7 +67,16 @@ echo -e "${GREEN}Successfully built breezy-desktop-kwin package${NC}"
 echo -e "\n${YELLOW}Running tests for breezy-desktop-kwin...${NC}"
 tests/breezy-desktop-kwin/test.sh "$(realpath ./result)" || { echo -e "${RED}Tests failed for breezy-desktop-kwin${NC}"; exit 1; }
 
-# Test 5: Run flake check (with some allowed failures)
+# Test 5: Run Nix unit tests
+echo -e "\n${YELLOW}Running Nix unit tests...${NC}"
+if ./tests/unit/run-tests.sh; then
+  echo -e "${GREEN}Nix unit tests passed${NC}"
+else
+  echo -e "${RED}Nix unit tests failed${NC}"
+  exit 1
+fi
+
+# Test 6: Run flake check (with some allowed failures)
 echo -e "\n${YELLOW}Running flake check...${NC}"
 if nix flake check 2>&1 | grep -v "packages.x86_64-linux.overrideDerivation"; then
   echo -e "${GREEN}Flake check passed${NC}"

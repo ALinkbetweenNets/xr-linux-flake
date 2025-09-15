@@ -50,5 +50,10 @@ jobs:
         chmod +x tests/breezy-desktop-kwin/test.sh
         tests/breezy-desktop-kwin/test.sh "$(realpath ./result)"
     
+    - name: Run Nix Unit Tests
+      run: |
+        chmod +x tests/unit/run-tests.sh
+        ./tests/unit/run-tests.sh
+    
     - name: Run Flake Check
       run: nix flake check
