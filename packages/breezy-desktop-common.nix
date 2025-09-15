@@ -11,7 +11,7 @@ stdenv.mkDerivation {
     owner = "wheaney";
     repo = "breezy-desktop";
     rev = "v2.2.3";
-    hash = "sha256-LYm0W6AsCo62hBLT/VLhYhK6UNxV4DkP7VT4ZzHvIlc=";
+    hash = "sha256-WkNsn0ACLqub6wqBa943GRB9X+WD6J1fb3LM+2Kigzc=";
   };
 
   dontBuild = true;
@@ -19,9 +19,15 @@ stdenv.mkDerivation {
 
   installPhase = ''
     mkdir -p $out/share/breezy-desktop
-    cp -r VERSION $out/share/breezy-desktop/
-    cp -r modules/sombrero/*.png $out/share/breezy-desktop/
-    cp -r ui/data/icons $out/share/icons
+    mkdir -p $out/share/icons/hicolor/scalable/apps
+    
+    # Copy VERSION file
+    cp VERSION $out/share/breezy-desktop/
+    
+    # Copy icon if it exists
+    if [ -f ui/data/icons/hicolor/scalable/apps/com.xronlinux.BreezyDesktop.svg ]; then
+      cp ui/data/icons/hicolor/scalable/apps/com.xronlinux.BreezyDesktop.svg $out/share/icons/hicolor/scalable/apps/
+    fi
   '';
 
   meta = with lib; {
