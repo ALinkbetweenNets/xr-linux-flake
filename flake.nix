@@ -12,9 +12,13 @@
       url = "github:wheaney/XRLinuxDriver";
       flake = false;
     };
+    pre-commit-hooks = {
+      url = "github:cachix/pre-commit-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, xrealInterfaceLibrary, upstream, ... }:
+  outputs = { self, nixpkgs, flake-utils, xrealInterfaceLibrary, upstream, pre-commit-hooks, ... }:
     let
       # NixOS module shared across all systems
       nixosModule = import ./modules/nixos;
@@ -45,6 +49,21 @@
             lib = nixpkgs.lib;
             xrLibrary = self.lib;
           };
+          
+          # Add pre-commit hooks
+          pre-commit-check = pre-commit-hooks.lib.${system}.run {
+            src = ./.;
+            hooks = {
+              nixpkgs-fmt.enable = true;
+              run-tests = {
+                enable = true;
+                name = "Run all tests";
+                entry = "${pkgs.bash}/bin/bash -c './tests/run-tests.sh'";
+                language = "system";
+                pass_filenames = false;
+              };
+            };
+          };
         };
       in {
         packages = packages // {
@@ -58,7 +77,21 @@
         inherit checks;
         
         # Add a devShell with testing tools
-        devShell = pkgs.mkShell {
+        devShell = let 
+          pre-commit = pre-commit-hooks.lib.${system}.run {
+            src = ./.;
+            hooks = {
+              nixpkgs-fmt.enable = true;
+              run-tests = {
+                enable = true;
+                name = "Run all tests";
+                entry = "${pkgs.bash}/bin/bash -c './tests/run-tests.sh'";
+                language = "system";
+                pass_filenames = false;
+              };
+            };
+          };
+        in pkgs.mkShell {
           buildInputs = with pkgs; [
             nixpkgs-fmt  # Nix formatter
             nixpkgs-lint # Nix linter
@@ -66,6 +99,8 @@
           shellHook = ''
             echo "XR Linux development environment"
             echo "Run './tests/unit/run-tests.sh' to run Nix unit tests"
+            ${pre-commit.shellHook}
+            ./install-hooks.sh
           '';
         };
       }

@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -e
+
+# Print colored message
+function log() {
+  local color=$1
+  local message=$2
+  echo -e "\033[${color}m${message}\033[0m"
+}
+
+# Colors
+RED=31
+GREEN=32
+YELLOW=33
+BLUE=34
+
+log $BLUE "Running pre-commit checks for XR Linux Flake..."
+
+# Check if there are staged changes
+if git diff --cached --quiet ; then
+  log $YELLOW "No changes to commit. Skipping pre-commit hooks."
+  exit 0
+fi
+
+# Run the tests
+log $YELLOW "Running tests..."
+./tests/run-tests.sh
+
+# Build all packages
+log $YELLOW "Building all packages independently..."
+nix build .#xrlinuxdriver --no-link
+nix build .#breezy-desktop-common --no-link
+nix build .#breezy-desktop-gnome --no-link
+nix build .#breezy-desktop-kwin --no-link
+
+# Build the lib-tests check
+log $YELLOW "Building lib-tests check..."
+nix build .#checks.x86_64-linux.lib-tests --no-link
+
+# Test development shell
+log $YELLOW "Testing development shell..."
+nix develop --command bash -c "echo 'Development shell works!'"
+
+log $GREEN "All pre-commit checks passed! Proceeding with commit."

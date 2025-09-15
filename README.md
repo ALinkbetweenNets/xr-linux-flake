@@ -11,6 +11,7 @@ The original projects can be found here:
 - [x] Implement Nix packages for XRLinuxDriver
 - [x] Implement Nix services for XRLinuxDriver
 - [x] Implement Breezy Desktop integration for GNOME and KDE
+- [x] Add test infrastructure with pre-commit hooks
 - [ ] Validation testing on NixOS
 - [ ] Upstream to Nixpkgs
 
@@ -147,4 +148,42 @@ The Breezy Desktop integrations provide:
 - Keyboard shortcuts for common actions
 
 Note that some features may be part of the paid "Productivity Tier" - see the [Breezy Desktop pricing](https://github.com/wheaney/breezy-desktop#breezy-desktop-pricing-productivity-tier) for details.
+
+## Development
+
+### Pre-commit Hooks
+
+This repository includes pre-commit hooks that run tests and builds before each commit. To install them:
+
+```bash
+./install-hooks.sh
+```
+
+Alternatively, use the Nix development shell which automatically installs the hooks:
+
+```bash
+nix develop
+```
+
+The hooks ensure that:
+1. All tests pass with `./tests/run-tests.sh`
+2. All packages build correctly
+3. The development shell works as expected
+
+### Running Tests Manually
+
+To run all tests manually:
+
+```bash
+./tests/run-tests.sh
+```
+
+### Building Individual Packages
+
+```bash
+nix build .#xrlinuxdriver
+nix build .#breezy-desktop-common
+nix build .#breezy-desktop-gnome
+nix build .#breezy-desktop-kwin
+```
 
