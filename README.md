@@ -1,4 +1,4 @@
-# xrlinuxdriver-flake
+# xr-linux-flake
 
 A Nix flake providing packages and services related to the XRLinuxDriver project and Breezy Desktop integrations.
 
@@ -23,7 +23,7 @@ The original projects can be found here:
 You can run the driver directly without installing it permanently:
 
 ```bash
-nix run github:tcarrio/xrlinuxdriver-flake
+nix run github:tcarrio/xr-linux-flake
 ```
 
 #### Installing via Home Manager
@@ -34,23 +34,23 @@ Add the flake to your Home Manager configuration:
 {
   inputs = {
     # ... your other inputs
-    xrlinuxdriver-flake.url = "github:tcarrio/xrlinuxdriver-flake";
+    xr-linux-flake.url = "github:tcarrio/xr-linux-flake";
   };
 
-  outputs = { self, nixpkgs, home-manager, xrlinuxdriver-flake, ... }:
+  outputs = { self, nixpkgs, home-manager, xr-linux-flake, ... }:
     {
       homeConfigurations.your-username = home-manager.lib.homeManagerConfiguration {
         # ... your other configuration
         pkgs = nixpkgs.legacyPackages.x86_64-linux;
-        extraSpecialArgs = { inherit xrlinuxdriver-flake; };
+        extraSpecialArgs = { inherit xr-linux-flake; };
         modules = [
-          ({ pkgs, xrlinuxdriver-flake, ... }: {
+          ({ pkgs, xr-linux-flake, ... }: {
             home.packages = [
-              xrlinuxdriver-flake.packages.x86_64-linux.xrlinuxdriver
+              xr-linux-flake.packages.x86_64-linux.xrlinuxdriver
               # For GNOME integration:
-              xrlinuxdriver-flake.packages.x86_64-linux.breezy-desktop-gnome
+              xr-linux-flake.packages.x86_64-linux.breezy-desktop-gnome
               # For KDE integration:
-              # xrlinuxdriver-flake.packages.x86_64-linux.breezy-desktop-kwin
+              # xr-linux-flake.packages.x86_64-linux.breezy-desktop-kwin
             ];
           })
         ];
@@ -69,15 +69,15 @@ To enable the driver system-wide, add the flake to your NixOS configuration:
 {
   inputs = {
     # ... your other inputs
-    xrlinuxdriver-flake.url = "github:tcarrio/xrlinuxdriver-flake";
+    xr-linux-flake.url = "github:tcarrio/xr-linux-flake";
   };
 
-  outputs = { self, nixpkgs, xrlinuxdriver-flake, ... }:
+  outputs = { self, nixpkgs, xr-linux-flake, ... }:
     {
       nixosConfigurations.your-hostname = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          xrlinuxdriver-flake.nixosModules.default
+          xr-linux-flake.nixosModules.default
           {
             services.xrlinuxdriver = {
               enable = true;

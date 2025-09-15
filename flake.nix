@@ -1,5 +1,5 @@
 {
-  description = "Nix flake for XRLinuxDriver - a driver for XR glasses on Linux";
+  description = "Nix flake for XR glasses on Linux - including XRLinuxDriver and Breezy Desktop";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -64,7 +64,7 @@
             nixpkgs-lint # Nix linter
           ];
           shellHook = ''
-            echo "XRLinuxDriver development environment"
+            echo "XR Linux development environment"
             echo "Run './tests/unit/run-tests.sh' to run Nix unit tests"
           '';
         };

@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
-echo -e "${BLUE}==== Running Tests for XRLinuxDriver Flake ====${NC}"
+echo -e "${BLUE}==== Running Tests for XR Linux Flake ====${NC}"
 echo -e "${BLUE}Repository root: ${REPO_ROOT}${NC}"
 
 # Set execute permissions for all test scripts
