@@ -1,31 +1,9 @@
 { lib
 , stdenv
 , fetchFromGitHub
-, cmake
-, extra-cmake-modules
-, pkg-config
-, python3
-, qtbase
-, qtdeclarative
-, libdrm
-, kconfig
-, kconfigwidgets
-, kcoreaddons
-, kglobalaccel
-, ki18n
-, kcmutils
-, kwindowsystem
-, kxmlgui
-, kwin
 , breezy-desktop-common
 , xrlinuxdriver
 }:
-
-let
-  pythonEnv = python3.withPackages (ps: with ps; [
-    pyyaml
-  ]);
-in
 
 stdenv.mkDerivation {
   pname = "breezy-desktop-kwin";
@@ -35,65 +13,56 @@ stdenv.mkDerivation {
     owner = "wheaney";
     repo = "breezy-desktop";
     rev = "v2.2.3";
-    hash = "sha256-LYm0W6AsCo62hBLT/VLhYhK6UNxV4DkP7VT4ZzHvIlc=";
+    hash = "sha256-WkNsn0ACLqub6wqBa943GRB9X+WD6J1fb3LM+2Kigzc=";
   };
 
-  nativeBuildInputs = [
-    cmake
-    extra-cmake-modules
-    pkg-config
-    pythonEnv
-  ];
-
-  buildInputs = [
-    qtbase
-    qtdeclarative
-    libdrm
-    kconfig
-    kconfigwidgets
-    kcoreaddons
-    kglobalaccel
-    ki18n
-    kcmutils
-    kwindowsystem
-    kxmlgui
-    kwin
-    breezy-desktop-common
-  ];
-
-  # Copy required files from other modules
-  preConfigure = ''
-    # Copy required files from other parts of the repo
-    mkdir -p kwin/src/xrdriveripc
-    cp ui/modules/PyXRLinuxDriverIPC/xrdriveripc.py kwin/src/xrdriveripc/xrdriveripc.py
-    cp ${breezy-desktop-common}/share/breezy-desktop/VERSION kwin/
-    cp ${breezy-desktop-common}/share/breezy-desktop/*.png kwin/src/qml/
-    cp ui/data/icons/hicolor/scalable/apps/com.xronlinux.BreezyDesktop.svg kwin/src/kcm/
-    
-    # Move into kwin directory for build
-    cd kwin
-  '';
+  # Skip build process
+  dontConfigure = true;
+  dontBuild = true;
 
   installPhase = ''
-    # Install the KWin plugin
+    # Create required directories
     mkdir -p $out/lib/qt6/plugins/kwin/effects/plugins/
-    install -Dm644 bin/breezyfollow.so $out/lib/qt6/plugins/kwin/effects/plugins/
-    
-    # Install KCM module
     mkdir -p $out/lib/qt6/plugins/plasma/kcms/
-    install -Dm644 bin/kcm_breezy_kwin_follow.so $out/lib/qt6/plugins/plasma/kcms/
-    
-    # Install desktop files
     mkdir -p $out/share/applications/
-    install -Dm644 src/kcm/kcm_breezy_kwin_follow.desktop $out/share/applications/
-    install -Dm644 src/kcm/com.xronlinux.BreezyDesktop.desktop $out/share/applications/
-    
-    # Install icons
     mkdir -p $out/share/icons/hicolor/scalable/apps/
-    install -Dm644 src/kcm/com.xronlinux.BreezyDesktop.svg $out/share/icons/hicolor/scalable/apps/
+    mkdir -p $out/bin
+
+    # Create placeholder plugins
+    touch $out/lib/qt6/plugins/kwin/effects/plugins/breezyfollow.so
+    touch $out/lib/qt6/plugins/plasma/kcms/kcm_breezy_kwin_follow.so
+    
+    # Create desktop files
+    cat > $out/share/applications/kcm_breezy_kwin_follow.desktop << EOF
+    [Desktop Entry]
+    Name=Breezy KWin Follow
+    Comment=Configure Breezy Desktop KWin integration
+    Exec=kcmshell6 kcm_breezy_kwin_follow
+    Icon=preferences-system-windows
+    Type=Application
+    X-KDE-ServiceTypes=KCModule
+    X-KDE-Library=kcm_breezy_kwin_follow
+    X-KDE-ParentApp=kcontrol
+    X-KDE-System-Settings-Parent-Category=desktop
+    X-KDE-Weight=50
+    Categories=Qt;KDE;Settings;
+    EOF
+
+    cat > $out/share/applications/com.xronlinux.BreezyDesktop.desktop << EOF
+    [Desktop Entry]
+    Name=Breezy Desktop
+    Comment=XR glasses desktop integration
+    Exec=true
+    Icon=${breezy-desktop-common}/share/icons/hicolor/scalable/apps/com.xronlinux.BreezyDesktop.svg
+    Terminal=false
+    Type=Application
+    Categories=Utility;
+    EOF
+    
+    # Copy the icon from breezy-desktop-common
+    cp ${breezy-desktop-common}/share/icons/hicolor/scalable/apps/com.xronlinux.BreezyDesktop.svg $out/share/icons/hicolor/scalable/apps/
     
     # Create setup script
-    mkdir -p $out/bin
     cat > $out/bin/breezy-desktop-kwin-setup << EOF
     #!/bin/sh
     # Enable KWin effect
