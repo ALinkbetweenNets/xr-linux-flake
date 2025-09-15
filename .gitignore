@@ -2,3 +2,10 @@
 
 # conveniently storing the upstream src
 /upstream/
+
+# artifacts
+result
+result-*
+tmp*/
+
+/*-source/

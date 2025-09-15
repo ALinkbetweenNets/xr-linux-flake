@@ -1,55 +1,22 @@
-# NixOS module for XRLinuxDriver
+# NixOS module for XRLinuxDriver and Breezy Desktop
 { config, lib, pkgs, ... }:
 
-with lib;
+let 
+  xrlinuxdriverModule = import ./xrlinuxdriver.nix;
+  breezyGnomeModule = import ./breezy-desktop-gnome.nix;
+  breezyKwinModule = import ./breezy-desktop-kwin.nix;
+in
 
-let
-  cfg = config.services.xrlinuxdriver;
-in {
-  options.services.xrlinuxdriver = {
-    enable = mkEnableOption "XRLinuxDriver for XR glasses support";
+{
+  imports = [
+    ./xrlinuxdriver.nix
+    ./breezy-desktop-gnome.nix
+    ./breezy-desktop-kwin.nix
+  ];
 
-    package = mkOption {
-      type = types.package;
-      default = pkgs.xrlinuxdriver;
-      description = "The XRLinuxDriver package to use.";
-    };
-
-    autoStart = mkOption {
-      type = types.bool;
-      default = true;
-      description = ''
-        Whether to automatically start the XRLinuxDriver service when a supported device is connected.
-      '';
-    };
-  };
-
-  config = mkIf cfg.enable {
-    # Make udev rules available
-    services.udev.packages = [ cfg.package ];
-
-    # Ensure required kernel modules are loaded
-    boot.kernelModules = [ "uinput" ];
-
-    # Add required packages to the system
-    environment.systemPackages = [ cfg.package ];
-
-    # Configure systemd user service to start automatically (optional based on cfg.autoStart)
-    systemd.user.services.xr-driver = mkIf cfg.autoStart {
-      description = "XR user-space driver";
-      after = [ "network.target" ];
-      wantedBy = [ "default.target" ];
-      serviceConfig = {
-        Type = "simple";
-        Environment = "LD_LIBRARY_PATH=${cfg.package}/lib";
-        ExecStart = "${cfg.package}/bin/xrDriver";
-        Restart = "always";
-      };
-    };
-
-    # Ensure user service persists after logout
-    services.logind.extraConfig = ''
-      KillUserProcesses=no
-    '';
+  # Optional: Add meta information for the module
+  meta = {
+    maintainers = [];
+    doc = "NixOS modules for XRLinuxDriver and Breezy Desktop integrations";
   };
 }
