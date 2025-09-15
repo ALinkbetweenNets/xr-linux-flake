@@ -4,18 +4,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repository is a Nix flake that packages the XRLinuxDriver project. The XRLinuxDriver allows Linux devices to recognize supported XR glasses when plugged in and convert their movements into mouse movements and external broadcasts for games and applications.
+This repository is a Nix flake that packages the XRLinuxDriver project and Breezy Desktop integrations. The XRLinuxDriver allows Linux devices to recognize supported XR glasses when plugged in and convert their movements into mouse movements and external broadcasts for games and applications. Breezy Desktop provides integration with desktop environments like GNOME and KDE to create virtual displays.
 
-The upstream project source is included in the `/upstream` directory, and this flake aims to:
+The flake aims to:
 1. Implement Nix packages for the XRLinuxDriver
-2. Implement Nix services
-3. Eventually upstream to Nixpkgs
+2. Implement Nix packages for Breezy Desktop (GNOME and KDE integrations)
+3. Implement NixOS services for both
+4. Eventually upstream to Nixpkgs
 
 ## Repository Structure
 
-- `/upstream/`: Contains the source code for the XRLinuxDriver project
-- `/README.md`: Basic information about this flake
-- Other files will be created as part of developing the Nix flake
+- `/packages/`: Contains the Nix package definitions
+  - `xrlinuxdriver.nix`: XRLinuxDriver package definition
+  - `breezy-desktop-common.nix`: Common files for Breezy Desktop
+  - `breezy-desktop-gnome.nix`: GNOME integration package
+  - `breezy-desktop-kwin.nix`: KDE/KWin integration package
+  - `default.nix`: Imports and exports all packages
+- `/modules/nixos/`: Contains NixOS module definitions
+  - `xrlinuxdriver.nix`: XRLinuxDriver module
+  - `breezy-desktop-gnome.nix`: GNOME integration module
+  - `breezy-desktop-kwin.nix`: KDE integration module
+  - `default.nix`: Imports and exports all modules
+- `/flake.nix`: Main flake definition
+- `/README.md`: Usage instructions and features
 
 ## Key Components
 
@@ -32,79 +43,75 @@ The driver provides:
 - Translation of head movements to mouse movements
 - Adjustable sensitivity
 - Optional joystick mode
-- Integration with other projects like Breezy for virtual display functionality
 
-### Build System
+### Breezy Desktop Features
 
-The upstream project uses CMake with the following dependencies:
-- hidapi
-- json-c
-- Fusion
-- libevdev
-- libcurl
-- libwayland-client
-- libusb-1.0
-- openssl
+Breezy Desktop extends the XRLinuxDriver functionality with:
+- Virtual display support for GNOME and KDE Plasma
+- Window management in virtual space
+- Multiple virtual monitors
+- Curved displays (on GNOME 46+)
+- Keyboard shortcuts for common actions
+
+### Package Dependencies
+
+#### XRLinuxDriver
+- CMake, pkg-config, Python 3
+- libusb, libevdev, openssl, json-c, curl, wayland, libffi
+
+#### Breezy Desktop GNOME
+- meson, ninja, pkg-config
+- Python 3 with pygobject3, pydbus, pyyaml
+- glib, gtk3, gnome-shell, librsvg
+
+#### Breezy Desktop KDE/KWin
+- cmake, extra-cmake-modules, pkg-config
+- Python 3 with pyyaml
+- Qt6 (base, declarative), KDE Frameworks 6 components
+- libdrm, kwin
 
 ## Common Development Tasks
 
-### Building the Upstream Project
+### Building All Packages
 
 ```bash
-cd upstream
-mkdir -p build
-cd build
-cmake ..
-make
+nix build
 ```
 
-### Packaging the Upstream Project
+### Building Specific Packages
 
 ```bash
-cd upstream
-bin/package
+nix build .#xrlinuxdriver
+nix build .#breezy-desktop-gnome
+nix build .#breezy-desktop-kwin
 ```
 
-This will create a gzip file in the `out` directory.
-
-### Testing the Upstream Project
+### Testing the Flake
 
 ```bash
-cd upstream
-bin/package
-sudo bin/xr_driver_setup $(pwd)/build/xrDriver.tar.gz
+nix flake check
 ```
 
-## Nix Flake Development
+### Using in NixOS Configuration
 
-The goal is to create a proper Nix flake for this project, which will include:
+To use the XRLinuxDriver:
+```nix
+services.xrlinuxdriver.enable = true;
+```
 
-1. A `flake.nix` file that defines:
-   - Packages for the XRLinuxDriver
-   - NixOS services for automatic startup and device detection
+To use Breezy Desktop GNOME integration:
+```nix
+services.breezy-desktop-gnome.enable = true;
+```
 
-2. Creating proper Nix expressions for building the driver with all its dependencies
+To use Breezy Desktop KDE integration:
+```nix
+services.breezy-desktop-kwin.enable = true;
+```
 
-3. Ensuring proper integration with NixOS for udev rules and systemd services
+## Additional Notes
 
-### Commands for Nix Flake Development
-
-- Initialize the flake:
-  ```bash
-  nix flake init
-  ```
-
-- Update flake inputs:
-  ```bash
-  nix flake update
-  ```
-
-- Build the flake:
-  ```bash
-  nix build
-  ```
-
-- Test the flake:
-  ```bash
-  nix flake check
-  ```
+- The XREAL integration in XRLinuxDriver is currently disabled because it requires additional git submodules
+- Breezy Desktop has both free and paid features (Productivity Tier)
+- The packages are built directly from source rather than using pre-built binaries
+- For local development, you can modify the packages and test with `nix build .`

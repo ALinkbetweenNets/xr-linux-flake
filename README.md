@@ -1,18 +1,21 @@
 # xrlinuxdriver-flake
 
-A Nix flake providing packages and services related to the XRLinuxDriver project.
+A Nix flake providing packages and services related to the XRLinuxDriver project and Breezy Desktop integrations.
 
-The original project can be found [here](https://github.com/wheaney/XRLinuxDriver.git).
+The original projects can be found here:
+- [XRLinuxDriver](https://github.com/wheaney/XRLinuxDriver)
+- [Breezy Desktop](https://github.com/wheaney/breezy-desktop)
 
 ## Goals
 
-[x] - Implement Nix packages
-[x] - Implement Nix services
+[x] - Implement Nix packages for XRLinuxDriver
+[x] - Implement Nix services for XRLinuxDriver
+[x] - Implement Breezy Desktop integration for GNOME and KDE
 [ ] - Upstream to Nixpkgs
 
 ## Usage
 
-### Installing the Package
+### Installing the Packages
 
 #### Standalone Usage
 
@@ -43,6 +46,10 @@ Add the flake to your Home Manager configuration:
           ({ pkgs, xrlinuxdriver-flake, ... }: {
             home.packages = [
               xrlinuxdriver-flake.packages.x86_64-linux.xrlinuxdriver
+              # For GNOME integration:
+              xrlinuxdriver-flake.packages.x86_64-linux.breezy-desktop-gnome
+              # For KDE integration:
+              # xrlinuxdriver-flake.packages.x86_64-linux.breezy-desktop-kwin
             ];
           })
         ];
@@ -52,6 +59,8 @@ Add the flake to your Home Manager configuration:
 ```
 
 ### NixOS Module
+
+#### Basic XRLinuxDriver
 
 To enable the driver system-wide, add the flake to your NixOS configuration:
 
@@ -80,6 +89,28 @@ To enable the driver system-wide, add the flake to your NixOS configuration:
 }
 ```
 
+#### GNOME Integration
+
+To enable the Breezy Desktop GNOME integration:
+
+```nix
+{
+  services.xrlinuxdriver.enable = true;
+  services.breezy-desktop-gnome.enable = true;
+}
+```
+
+#### KDE/KWin Integration
+
+To enable the Breezy Desktop KDE/KWin integration:
+
+```nix
+{
+  services.xrlinuxdriver.enable = true;
+  services.breezy-desktop-kwin.enable = true;
+}
+```
+
 ## Features
 
 This flake provides:
@@ -90,12 +121,29 @@ This flake provides:
    - Required libraries
    - udev rules for device detection
 
-2. A NixOS module that sets up:
-   - System integration via udev rules
-   - Automatic loading of required kernel modules
-   - A systemd user service for running the driver
+2. Breezy Desktop integration packages:
+   - `breezy-desktop-gnome`: GNOME Shell integration
+   - `breezy-desktop-kwin`: KDE Plasma 6 integration
+   - `breezy-desktop-common`: Shared resources
+
+3. NixOS modules for system integration:
+   - XRLinuxDriver base configuration
+   - GNOME desktop integration
+   - KDE/KWin desktop integration
 
 ## Supported Devices
 
 Check the [upstream project](https://github.com/wheaney/XRLinuxDriver#supported-devices) for the list of supported XR glasses.
+
+## Breezy Desktop Features
+
+The Breezy Desktop integrations provide:
+
+- Virtual display functionality for XR glasses
+- Window management and positioning
+- Curved displays (on GNOME 46+)
+- Multiple virtual monitors
+- Keyboard shortcuts for common actions
+
+Note that some features may be part of the paid "Productivity Tier" - see the [Breezy Desktop pricing](https://github.com/wheaney/breezy-desktop#breezy-desktop-pricing-productivity-tier) for details.
 
