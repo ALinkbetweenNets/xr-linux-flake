@@ -8,9 +8,13 @@
       url = "git+https://gitlab.com/TheJackiMonster/nrealAirLinuxDriver.git";
       flake = false;
     };
+    upstream = {
+      url = "github:wheaney/XRLinuxDriver";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, xrealInterfaceLibrary, ... }:
+  outputs = { self, nixpkgs, flake-utils, xrealInterfaceLibrary, upstream, ... }:
     let
       # NixOS module shared across all systems
       nixosModule = import ./modules/nixos.nix;
@@ -28,12 +32,12 @@
           pname = "xrlinuxdriver";
           version = "2.1.5"; # From upstream CMakeLists.txt
 
-          src = ./upstream;
+          src = upstream;
 
           nativeBuildInputs = with pkgs; [
             cmake
             pkg-config
-            python3
+            (python3.withPackages (ps: with ps; [ pyyaml ]))
             git
           ];
 
@@ -44,23 +48,43 @@
             json_c
             curl
             wayland
+            libffi # Required by wayland-client
           ];
 
           cmakeFlags = [
             "-DCMAKE_BUILD_TYPE=Release"
+            "-DCMAKE_SKIP_BUILD_RPATH=OFF"
+            "-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON"
+            "-DCMAKE_INSTALL_RPATH=$ORIGIN/../lib"
+            "-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON"
           ];
 
           prePatch = ''
-            # Create necessary directories for submodules
-            mkdir -p modules/xrealInterfaceLibrary
-            cp -r ${xrealInterfaceLibrary}/* modules/xrealInterfaceLibrary/
+            # Create default custom_banner_config.yml
+            echo "# Default empty configuration" > custom_banner_config.yml
+            echo "banners: []" >> custom_banner_config.yml
           '';
 
           postPatch = ''
-            # Make git submodule commands do nothing (we'll handle dependencies via Nix)
+            # Make git submodule commands do nothing
             substituteInPlace CMakeLists.txt \
-              --replace "execute_process(COMMAND git submodule update --init --recursive" "execute_process(COMMAND echo \"Skipping git submodule update\""
+              --replace-fail "execute_process(COMMAND git submodule update --init --recursive" "execute_process(COMMAND echo \"Skipping git submodule update\""
             
+            # Disable the XREAL device as we can't build it without the submodules
+            echo "Removing xreal.c from SOURCES"
+            substituteInPlace CMakeLists.txt \
+              --replace-fail "    src/devices/xreal.c" ""
+            
+            # Modify devices.c to remove references to xreal_driver
+            sed -i 's/&xreal_driver,/\/\* Disabled: \&xreal_driver, \*\//g' src/devices.c
+            
+            # Remove references to the xrealAirLibrary
+            substituteInPlace CMakeLists.txt \
+              --replace-fail "add_subdirectory(modules/xrealInterfaceLibrary/interface_lib)" "# Disabled"
+            
+            substituteInPlace CMakeLists.txt \
+              --replace-fail "xrealAirLibrary" ""
+              
             # Set UA_API_SECRET to empty string if not provided
             export UA_API_SECRET_INTENTIONALLY_EMPTY=1
           '';
@@ -82,10 +106,12 @@
             
             # Fix paths in scripts to point to the Nix store location
             for file in $out/bin/xr_driver_* $out/bin/bin/user/*; do
-              substituteInPlace $file \
-                --replace "realpath bin/" "$out/bin/bin/" \
-                --replace "../bin/" "$out/bin/bin/" \
-                --replace "./bin/" "$out/bin/bin/"
+              if [ -f "$file" ]; then
+                substituteInPlace $file \
+                  --replace "realpath bin/" "$out/bin/bin/" \
+                  --replace "../bin/" "$out/bin/bin/" \
+                  --replace "./bin/" "$out/bin/bin/" || true
+              fi
             done
 
             # Install systemd service files with path substitutions
@@ -101,7 +127,12 @@
 
             # Install libraries
             mkdir -p $out/lib
-            cp -r ../lib/${builtins.currentSystem == "x86_64-linux" ? "x86_64" : "aarch64"}/*.so $out/lib/ || true
+            cp -r ../lib/$(if [ "${system}" = "x86_64-linux" ]; then echo "x86_64"; else echo "aarch64"; fi)/*.so $out/lib/ || true
+          '';
+          
+          fixupPhase = ''
+            # Fix RPATH issues
+            patchelf --set-rpath '$ORIGIN/../lib' $out/bin/xrDriver
           '';
 
           meta = with pkgs.lib; {

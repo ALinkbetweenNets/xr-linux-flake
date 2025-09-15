@@ -1,1 +1,4 @@
 **/.claude/settings.local.json
+
+# conveniently storing the upstream src
+/upstream/
