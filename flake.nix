@@ -22,34 +22,34 @@
     let
       # NixOS module shared across all systems
       nixosModule = import ./modules/nixos;
-      
+
       # Our custom library functions
       xrLib = import ./lib;
     in
     {
       # NixOS module that can be imported
       nixosModules.default = nixosModule;
-      nixosModule = nixosModule; # For backwards compatibility
-      
+      # nixosModule = nixosModule; # For backwards compatibility
+
       # Expose our library functions
       lib = xrLib { lib = nixpkgs.lib; };
-    } // 
+    } //
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        
+
         packages = pkgs.callPackage ./packages {
           inherit pkgs xrealInterfaceLibrary upstream system;
         };
-        
+
         # Define unit tests as checks
         checks = {
-          lib-tests = import ./tests/unit/lib.nix { 
-            inherit pkgs; 
+          lib-tests = import ./tests/unit/lib.nix {
+            inherit pkgs;
             lib = nixpkgs.lib;
             xrLibrary = self.lib;
           };
-          
+
           # Add pre-commit hooks
           pre-commit-check = pre-commit-hooks.lib.${system}.run {
             src = ./.;
@@ -72,12 +72,12 @@
 
         # Make the packages available to NixOS modules
         overlays.default = final: prev: packages;
-        
+
         # Make checks available
         inherit checks;
-        
+
         # Add a devShell with testing tools
-        devShell = let 
+        devShell = let
           pre-commit = pre-commit-hooks.lib.${system}.run {
             src = ./.;
             hooks = {
