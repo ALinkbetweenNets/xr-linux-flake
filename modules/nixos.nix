@@ -48,8 +48,8 @@ in {
     };
 
     # Ensure user service persists after logout
-    services.logind.extraConfig = ''
-      KillUserProcesses=no
-    '';
+    # services.logind.extraConfig = ''
+    #   KillUserProcesses=no
+    # '';
   };
 }
